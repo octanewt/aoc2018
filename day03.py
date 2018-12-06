@@ -23,6 +23,8 @@ class Claim(object):
         else:
             raise ValueError('invalid args to init')
 
+        self.coord_set = self._coords()
+
     def _parse_str(self, claim_str):
         r = {}
         id_split = claim_str.split(' @ ')
@@ -33,6 +35,20 @@ class Claim(object):
 
         r['dimensions'] = start_split[1].strip().split('x')
         return r
+
+    def _coords(self):
+        result = set()
+        for i in range(self.startx, self.startx + self.width):
+            for j in range(self.starty, self.starty + self.height):
+                result.add((i, j))
+        return result
+
+    def inside(self, other):
+        if self.claim_id == other.claim_id:
+            return 0
+        result = self.coord_set & other.coord_set
+        # print('{}:{}  =>  {}'.format(self.claim_id, other.claim_id, result))
+        return len(result)
 
 
 def part_one(in_file):
@@ -60,8 +76,22 @@ def part_one(in_file):
 def part_two(in_file):
     """."""
     result = 0
-    return result
+    with open(in_file, 'r') as fp:
+        coord_map = {}
+        claim_list = [Claim(c) for c in fp]
+        for c in claim_list:
+            coord_map[c.claim_id] = []
+            for d in claim_list:
+                if c.inside(d):
+                    coord_map[c.claim_id].append(d.claim_id)
+    result = [c for c in coord_map if coord_map[c] == []]
+    if len(result) > 1:
+        raise Exception('Too many results!: {}'.format(result))
+    elif not result:
+        raise Exception('No results!: {}'.format(result))
+    return result[0]
 
 
-# print(part_two('day03_02_input.txt'))
-print(part_two('input.txt'))
+print(part_two('day03_02_input.txt'))
+# answer: 686
+# print(part_two('input.txt'))
